@@ -1,0 +1,15 @@
+{
+  "slot_mc": {
+    "analytic_P": 0.5314410000000002,
+    "mc_mean": 0.53395,
+    "mc_std": 0.0035273743599170187,
+    "n_trials": 20000
+  },
+  "sequence_physics": {
+    "alice_bob_counter": 7,
+    "carol_alice_counter": 10,
+    "window_s": 0.2,
+    "wall_s": 0.07376199960708618,
+    "note": "SeQUeNCe retries over a time window; counters are throughput, not slot P."
+  }
+}

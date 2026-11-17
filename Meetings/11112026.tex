@@ -1,0 +1,179 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage[T1]{fontenc}
+\usepackage{caption}
+\usepackage{xurl}
+
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+\setlist[itemize]{leftmargin=*,itemsep=0.2em,topsep=0.3em}
+\setlist[enumerate]{leftmargin=*,itemsep=0.2em,topsep=0.3em}
+\captionsetup{font=small,skip=6pt}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+\title{SeQUeNCe, using MUERP as the example}
+\author{Alexandra Bouillon}
+\date{November 11, 2026}
+
+\begin{document}
+\maketitle
+
+\textbf{SeQUeNCe} (Simulator of QUantum Network Communication), PyPI \texttt{sequence} 1.3.1.
+Discrete-event simulator: a timeline fires device and protocol events in simulated time.
+It does \textbf{not} include Zeng et~al.'s Algorithms~1--4.
+Those run in Python first; SeQUeNCe then tries to \emph{execute} the resulting tree.
+
+Running example throughout: Zeng et~al., \emph{Multi-user Entanglement Routing Design over Quantum Internets} (ICDCS 2024).
+Three users (Alice, Bob, Carol) and one switch $S$ --- their Fig.~4a.
+MUERP wants an \textbf{entanglement tree} (here: Alice--$S$--Bob and Alice--$S$--Carol), 2 exclusive qubits per channel at a switch, and a one-slot success probability $P$.
+
+%----------------------------------------------------------------------
+\section{How a run is wired}
+
+\begin{enumerate}
+\item \textbf{Graph $\to$ routers.}
+NetworkX (or JSON) becomes \texttt{RouterNetTopo}.
+Every vertex is a \texttt{QuantumRouter}.
+Mid-link \texttt{BSMNode}s are extra hardware for photon generation, not MUERP switches.
+Tag MUERP users vs switches by \textbf{name} and \textbf{memory size}.
+\item \textbf{Paths.}
+Overwrite each router's \textbf{forwarding table} with the next hop from Algorithm~1--4.
+\texttt{RequestApp.start} has no path argument.
+\item \textbf{Book memories (RSVP).}
+Each pairwise channel is one \texttt{RequestApp}.
+Intermediates reserve $2\times$\texttt{memory\_size}.
+Overlap is refused (\texttt{MemoryTimeCard}).
+This is MUERP Def.~3.
+\item \textbf{Advance the timeline.}
+After $t=1$\,s, entanglement generation and swapping run for a service window.
+SeQUeNCe counts pairs (\texttt{memory\_counter}).
+That is \textbf{throughput}, not Zeng et~al.'s slot $P$.
+\item \textbf{$P$ outside.}
+Rejected reservation $\Rightarrow$ $P=0$.
+Else multiply $p$ and $q$ (Eq.~(1)--(2)) in a script.
+SeQUeNCe has no metric named $P$.
+\end{enumerate}
+
+%----------------------------------------------------------------------
+\section{Features (what it actually provides)}
+
+{\small
+\begin{center}
+\begin{tabularx}{\textwidth}{@{}P{1.25in} Y Y@{}}
+\toprule
+Feature & What it is & MUERP example \\
+\midrule
+Discrete-event kernel
+  & \texttt{Timeline} schedules messages, photon arrival, memory expiry.
+    Attempts are sequential in simulated time, not one simultaneous slot.
+  & Zeng et~al.\ assume every hop and swap in one slot.
+    SeQUeNCe approximates admission by stopping the timeline \emph{before} the service window, then computing $P$ from the reserved tree. \\
+Topology
+  & \texttt{generate\_config} / \texttt{RouterNetTopo}.
+    Templates include linear, star, Waxman.
+    No separate User class; \texttt{sq.Switch} is optics.
+  & Fig.~4a $=$ four \texttt{QuantumRouter}s.
+    Waxman 10 users + 50 switches is a 60-node NX graph with roles tagged by \texttt{memo\_size}. \\
+Quantum memories
+  & \texttt{memo\_size} $\to$ \texttt{MemoryArray}.
+    Coherence time and cutoff can expire pairs.
+  & $Q_S=4$ admits both Fig.~4a channels; $Q_S=2$ admits one and \textbf{rejects} the second. \\
+RSVP
+  & End-to-end reservation along the forwarding-table path.
+    Exclusive time slots on memories.
+  & The MUERP ``can this tree fit?'' question.
+    RSVP still \textbf{chooses which memory indices}; Algorithms~1--4 only choose paths. \\
+Static routing
+  & Next-hop tables, not a built-in MUERP solver.
+  & Write Alg.~4's next hops (and reverse) so RSVP follows Alice--$S$--Bob and Alice--$S$--Carol. \\
+\texttt{RequestApp}
+  & Pairwise session: initiator asks for \texttt{memo\_size} pairs to a responder over $[\mathrm{start},\mathrm{end}]$.
+  & One app per tree edge.
+    Two starts on the same Alice app overwrite \texttt{reservation\_result}; use \texttt{accepted\_reservations} on the switch.
+    Reverse the second initiator if needed. \\
+Link generation
+  & Single-heralded (or Barrett--Kok) EG on \texttt{QuantumChannel}.
+    Loss is \textbf{dB/m}, not $p=\exp(-\alpha L)$.
+  & Convert $\alpha,L$ to attenuation, or compute $p$ after admission.
+    Mid-link BSM is \textbf{not} Zeng et~al.'s $q$. \\
+Swapping
+  & \texttt{swapping\_success\_prob} on \texttt{EntanglementSwappingA/B} $=$ Zeng et~al.'s $q$.
+    Default is \textbf{1}, not $0.9$.
+    Formalism must match the quantum manager (\texttt{bell\_diagonal} for this stack).
+  & Set $q=0.9$.
+    Two swaps on Fig.~4a (one per length-2 channel) enter Eq.~(1) as $q^{\ell-1}$. \\
+Fidelity / decoherence
+  & EG/ES events carry fidelity; short \texttt{coherence\_time} + cutoff kills waiting pairs.
+  & Named MUERP extension, not in Zeng et~al.'s plotted $P$.
+    On Fig.~4a, generation fidelity $\sim 0.90$, swapping $\sim 0.57$; cutoff on $\Rightarrow$ 0 delivered pairs. \\
+Many reservations on one pool
+  & RSVP holds several trees on the same \texttt{MemoryArray}.
+  & Second named extension: two 5-user groups sharing one $Q_r$. \\
+Logging
+  & Protocol events, \texttt{memory\_counter}, expired memories.
+  & Use for throughput and fidelity.
+    Do not treat pair counts as Eq.~(2). \\
+\bottomrule
+\end{tabularx}
+\end{center}}
+
+%----------------------------------------------------------------------
+\section{Two numbers (do not mix)}
+
+\begin{itemize}
+\item \textbf{Slot $P$} (Zeng et~al.): one try of the whole tree.
+Fig.~4a with $p=q=0.9$: $P=(p^2 q)^2=0.531441$ if both channels are reserved, else $0$.
+\item \textbf{SeQUeNCe throughput:} how many pairs \texttt{RequestApp} collected in $0.2$\,s of retries (e.g.\ 7 and 10 on Fig.~4a).
+Different question.
+\end{itemize}
+
+%----------------------------------------------------------------------
+\section{One-sentence summary}
+
+SeQUeNCe is a timed reservation + device stack: it can \textbf{host} MUERP admission (exclusive $Q_r$, follow written paths, refuse overflow) on Fig.~4a and at 10+50 nodes; Algorithms~1--4 and Eq.~(1)--(2) stay in Python beside it.
+
+%----------------------------------------------------------------------
+\section{Algorithms 1--4 (Zeng et~al., offline; not inside SeQUeNCe)}
+
+Python in \texttt{Meetings/algorithm\{1--4\}\_*.py}.
+They output an entanglement tree (paths + Eq.~(2) $P$).
+SeQUeNCe only follows the next hops.
+
+\paragraph{Algorithm 1 --- maximum-rate channel.}
+One pair of users $u_i,u_j$.
+Dijkstra with edge weight $\alpha L-\ln q$ (log of Eq.~(1), so a \emph{product} of hop success and swaps becomes a \emph{sum}).
+Skip a neighbor switch if it has fewer than 2 qubits left.
+Recover the path from the \texttt{Prev} array.
+RATE $= q^{\ell-1}\prod_i p_{i,i+1}$ with $p=\exp(-\alpha L)$.
+Building block for Algorithms~2--4.
+
+\paragraph{Algorithm 2 --- optimal when capacity is plentiful.}
+Assumes $Q_r\ge 2|U|$ on every switch (Theorem~3), so capacity is ignored.
+Run Alg.~1 for every user pair; sort those channels by RATE descending; Kruskal / union-find: add a channel only if the two users are not already connected.
+Output: $|U|-1$ channels, $P=$ product of RATEs.
+Optimal \emph{only} under that $Q_r$ bound.
+On Fig.~4a it still returns two channels even if $Q_S=2$ (infeasible in hardware).
+
+\paragraph{Algorithm 3 --- conflict-free (finite $Q_r$).}
+Input: the all-pair Alg.~1 channels from Alg.~2, plus leftover $Q_r$.
+Walk them best-RATE first; keep a channel only if every switch on it still has $\ge 2$ qubits; subtract 2 per switch; union-find as in Alg.~2.
+If users remain in several components, repeatedly run Alg.~1 between users in different unions under the \emph{remaining} $Q_r$ and add the single best feasible channel.
+If none exists, terminate, $P=0$.
+Fig.~4a: $Q_S=4$ $\Rightarrow$ $P=0.531441$; $Q_S=2$ $\Rightarrow$ $P=0$.
+
+\paragraph{Algorithm 4 --- Prim-based (finite $Q_r$, no Alg.~2).}
+Pick a start user $u_0$.
+$U_1=\{u_0\}$, $U_2=U\setminus\{u_0\}$.
+For $|U|-1$ rounds: among all Alg.~1 channels from someone in $U_1$ to someone in $U_2$ that still fit leftover $Q_r$, take the max RATE; move that outer user into $U_1$; subtract 2 qubits per switch on the path.
+If a round finds nothing, terminate, $P=0$.
+Same Fig.~4a numbers as Alg.~3 on that tiny graph; can differ from Alg.~3 when $Q_r$ is tight on larger graphs.
+
+\end{document}

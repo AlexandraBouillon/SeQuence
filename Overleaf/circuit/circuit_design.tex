@@ -1,0 +1,221 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage[T1]{fontenc}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+\newcommand{\unchecked}{\(\square\)}
+
+\title{Quantum Circuit Design: Weekly Study Notes}
+\author{Alexandra Bouillon}
+\date{October 12--18, 2026}
+
+\begin{document}
+\maketitle
+
+\section{Goal}
+
+Learn to design a circuit that communicates five things clearly:
+
+\begin{enumerate}
+    \item Which node owns each qubit.
+    \item Which qubits are already entangled.
+    \item Which gates happen locally.
+    \item Which measurements produce classical bits.
+    \item Which later gates are controlled by those classical results.
+\end{enumerate}
+
+\section{Design Rules}
+
+\subsection{Label wires by owner and role}
+
+Prefer:
+
+\begin{verbatim}
+A.data       Alice's unknown input state
+A.link       Alice's half of a Bell pair
+S.left       Switch half linked to Alice
+S.right      Switch half linked to Bob
+B.link       Bob's half of a Bell pair
+\end{verbatim}
+
+Avoid labels such as \(q_0,q_1,q_2,q_3\) alone once multiple nodes are involved. Numbered labels hide ownership.
+
+\subsection{Separate the three planes}
+
+\begin{itemize}
+    \item \textbf{Quantum state:} qubit wires, gates, memories, and measurements.
+    \item \textbf{Quantum channel:} physical process that establishes a Bell link between neighboring nodes.
+    \item \textbf{Classical control:} heralding, link-state messages, BSM outcomes, and correction commands.
+\end{itemize}
+
+A clear diagram should not make classical messages look like transmitted qubits.
+
+\subsection{Design in blocks}
+
+\begin{center}
+\fbox{Prepare links}
+\(\rightarrow\)
+\fbox{Herald/store}
+\(\rightarrow\)
+\fbox{BSM}
+\(\rightarrow\)
+\fbox{Send result}
+\(\rightarrow\)
+\fbox{Correct}
+\(\rightarrow\)
+\fbox{Use ebit}
+\end{center}
+
+This matches the network sequence:
+
+\begin{itemize}
+    \item External links are established first.
+    \item Their success states are shared classically.
+    \item The switch performs an internal swap.
+    \item The endpoints interpret or correct the resulting Bell state.
+\end{itemize}
+
+\section{Bell State Measurement Block}
+
+A standard logical BSM circuit for two qubits is:
+
+\begin{verbatim}
+S.left:  ----o----H----M---- c0
+             |
+S.right: ----X---------M---- c1
+\end{verbatim}
+
+The CNOT and Hadamard rotate the Bell basis into the computational basis. Measurement then identifies one of four Bell-state outcomes using two classical bits.
+
+\subsection{Correction lookup}
+
+One common convention is:
+
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+\textbf{BSM result} & \textbf{Endpoint correction} \\
+\hline
+\(\Phi^+\) & \(I\) \\
+\(\Phi^-\) & \(Z\) \\
+\(\Psi^+\) & \(X\) \\
+\(\Psi^-\) & \(XZ\) \\
+\hline
+\end{tabular}
+\end{center}
+
+The exact bit-to-gate mapping depends on wire ordering and circuit convention. State the convention instead of memorizing an unlabeled table.
+
+\section{One-Switch Design Template}
+
+\subsection{Inputs}
+
+\begin{itemize}
+    \item Bell link between \texttt{A.link} and \texttt{S.left}.
+    \item Bell link between \texttt{S.right} and \texttt{B.link}.
+\end{itemize}
+
+\subsection{Local switch operation}
+
+\begin{enumerate}
+    \item Confirm both links succeeded.
+    \item Apply CNOT from \texttt{S.left} to \texttt{S.right}.
+    \item Apply \(H\) to \texttt{S.left}.
+    \item Measure both switch qubits.
+    \item Send the two-bit result over a classical channel.
+\end{enumerate}
+
+\subsection{Outputs}
+
+\begin{itemize}
+    \item \texttt{S.left} and \texttt{S.right} are measured and freed.
+    \item \texttt{A.link} and \texttt{B.link} are entangled, up to a known Pauli frame or correction.
+    \item The switch has not measured either endpoint qubit.
+\end{itemize}
+
+\section{Circuit-Design Questions}
+
+Ask these before accepting a diagram:
+
+\begin{itemize}[leftmargin=*]
+    \item[\unchecked] Are all qubits initialized or supplied by a named link?
+    \item[\unchecked] Does every two-qubit gate act on qubits at the same physical node?
+    \item[\unchecked] If a gate appears to cross nodes, is it actually a link-generation abstraction?
+    \item[\unchecked] Are successful links heralded before the BSM starts?
+    \item[\unchecked] Are memory and coherence assumptions visible?
+    \item[\unchecked] Are measurements clearly destructive?
+    \item[\unchecked] Are classical outcomes drawn as classical wires or messages?
+    \item[\unchecked] Is the correction convention stated?
+    \item[\unchecked] Are consumed qubits distinguished from surviving endpoint qubits?
+    \item[\unchecked] Is the desired output state written explicitly?
+\end{itemize}
+
+\section{Common Design Mistakes}
+
+\begin{itemize}
+    \item \textbf{Drawing a CNOT directly across distant nodes.} Ordinary circuit notation can hide that a nonlocal operation requires an entanglement-assisted protocol or physical interaction.
+    \item \textbf{Sending the BSM result on a quantum wire.} The result is two classical bits.
+    \item \textbf{Leaving switch qubits entangled after measurement.} They are consumed and freed by the BSM.
+    \item \textbf{Calling swapping teleportation.} Swapping creates a longer ebit; teleportation consumes an ebit to move an unknown state.
+    \item \textbf{Treating an optical beam splitter as a qubit copier.} Splitting optical power is not cloning an unknown quantum state.
+    \item \textbf{Ignoring failed links.} The swap starts only after the required adjacent links are confirmed.
+    \item \textbf{Ignoring time.} Stored pairs must remain coherent while other links and control messages complete.
+\end{itemize}
+
+\section{Working Checklist}
+
+\begin{itemize}[leftmargin=*]
+    \item[\unchecked] Draw a Bell-pair preparation block.
+    \item[\unchecked] Draw a BSM block.
+    \item[\unchecked] Draw the two classical output bits.
+    \item[\unchecked] Add conditional \(X\) and \(Z\) correction blocks.
+    \item[\unchecked] Mark all operations by node.
+    \item[\unchecked] Mark the point at which each switch qubit is freed.
+    \item[\unchecked] Add heralding before the BSM.
+    \item[\unchecked] Add a failure path when only one adjacent link succeeds.
+    \item[\unchecked] Add a coherence-time boundary around one complete attempt.
+    \item[\unchecked] Explain the circuit from left to right without saying ``the switch sends the qubit.''
+\end{itemize}
+
+\section{Circuit-to-Network Translation}
+
+\begin{center}
+\begin{tabular}{|p{0.29\textwidth}|p{0.61\textwidth}|}
+\hline
+\textbf{Circuit element} & \textbf{Network meaning} \\
+\hline
+Bell-pair preparation & Establish an elementary entangled resource \\
+\hline
+Qubit wire & Stored quantum state, not necessarily a traveling photon \\
+\hline
+Measurement & Consumes the measured qubit and creates a classical outcome \\
+\hline
+Classical wire & Herald, link state, or BSM result \\
+\hline
+Conditional \(X/Z\) & Endpoint correction or Pauli-frame update \\
+\hline
+Repeated block & Another time-slot attempt \\
+\hline
+Parallel Bell blocks & Concurrent neighbor-link attempts \\
+\hline
+BSM block & Repeater or switch entanglement swap \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{End-of-Week Deliverable}
+
+\begin{itemize}[leftmargin=*]
+    \item[\unchecked] One clean Bell-pair circuit.
+    \item[\unchecked] One clean BSM circuit.
+    \item[\unchecked] One complete Alice--Switch--Bob circuit with ownership labels.
+    \item[\unchecked] One paragraph explaining the quantum and classical parts.
+    \item[\unchecked] One paragraph naming the physical assumptions hidden by the circuit.
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,180 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage[T1]{fontenc}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+\newcommand{\unchecked}{\(\square\)}
+
+\title{Circuit Entanglement: Weekly Study Notes}
+\author{Alexandra Bouillon}
+\date{October 12--18, 2026}
+
+\begin{document}
+\maketitle
+
+\section{Goal}
+
+Understand how a quantum circuit creates a Bell pair, how to verify the result, and how that local circuit becomes the basic resource used by a quantum network.
+
+\section{Core Circuit}
+
+Start with two qubits in \( |00\rangle \):
+
+\begin{verbatim}
+q0: |0> ----H----o----
+                 |
+q1: |0> ---------X----
+\end{verbatim}
+
+\subsection{State after each step}
+
+\begin{enumerate}
+    \item Initial state:
+    \[
+    |q_0q_1\rangle=|00\rangle.
+    \]
+
+    \item Apply the Hadamard gate to \(q_0\):
+    \[
+    (H\otimes I)|00\rangle
+    =\frac{|00\rangle+|10\rangle}{\sqrt{2}}.
+    \]
+
+    \item Apply CNOT with \(q_0\) as control and \(q_1\) as target:
+    \[
+    \frac{|00\rangle+|10\rangle}{\sqrt{2}}
+    \longrightarrow
+    \frac{|00\rangle+|11\rangle}{\sqrt{2}}
+    =|\Phi^+\rangle.
+    \]
+\end{enumerate}
+
+The qubits are now entangled: measuring one fixes the correlated outcome of the other. The individual result is random, but the pair is correlated.
+
+\section{What Each Gate Contributes}
+
+\begin{itemize}
+    \item \textbf{Hadamard:} creates a superposition on the control qubit.
+    \item \textbf{CNOT:} turns that superposition into a two-qubit correlation.
+    \item \textbf{Measurement:} produces either \(00\) or \(11\) in the ideal computational-basis experiment.
+\end{itemize}
+
+The CNOT alone does not create this Bell state from \( |00\rangle \); it needs the superposition created by \(H\).
+
+\section{Expected Ideal Measurements}
+
+After adding computational-basis measurements:
+
+\begin{verbatim}
+q0: |0> ----H----o----M---- c0
+                 |
+q1: |0> ---------X----M---- c1
+\end{verbatim}
+
+Expected counts over many shots:
+
+\begin{itemize}
+    \item Approximately 50\% \(00\)
+    \item Approximately 50\% \(11\)
+    \item Ideally 0\% \(01\)
+    \item Ideally 0\% \(10\)
+\end{itemize}
+
+Seeing only correlated computational-basis outcomes is necessary, but by itself it is not a complete proof of entanglement. A classical mixture can also produce \(00\) and \(11\). Verification in another basis or state tomography is needed to distinguish the Bell superposition from that classical mixture.
+
+\section{Connection to a Physical Network Link}
+
+The circuit above creates two entangled qubits locally. A network needs the halves at different nodes:
+
+\begin{verbatim}
+Bell-pair source
+     |-- q0 --> Node A memory
+     `-- q1 --> Node B memory
+\end{verbatim}
+
+Operational sequence:
+
+\begin{enumerate}
+    \item Create an entangled pair.
+    \item Deliver or map one half to each adjacent node.
+    \item Herald successful delivery through a classical message.
+    \item Store both halves in quantum memory.
+    \item Treat the pair as one available network ebit.
+\end{enumerate}
+
+The circuit describes the logical state preparation. Photon generation, loss, detection, memory mapping, and heralding are physical/link-layer operations around the circuit.
+
+\section{Rate and Fidelity}
+
+Keep these separate:
+
+\begin{itemize}
+    \item \textbf{Link success \(p\):} probability that a usable pair is established in the time window.
+    \item \textbf{Fidelity \(F\):} quality of the pair after success.
+\end{itemize}
+
+For target \( |\Phi^+\rangle \) and actual state \(\rho\):
+
+\[
+F=\langle\Phi^+|\rho|\Phi^+\rangle.
+\]
+
+A link may have:
+
+\begin{itemize}
+    \item High rate and low fidelity: pairs arrive often but are noisy.
+    \item Low rate and high fidelity: good pairs are rare.
+    \item Low rate and low fidelity: both delivery and quality are poor.
+\end{itemize}
+
+\section{Working Checklist}
+
+\begin{itemize}[leftmargin=*]
+    \item[\unchecked] Draw the Bell circuit from memory.
+    \item[\unchecked] Explain the state after \(H\).
+    \item[\unchecked] Explain the state after CNOT.
+    \item[\unchecked] Predict ideal measurement counts.
+    \item[\unchecked] Explain why \(00/11\) counts alone do not fully prove entanglement.
+    \item[\unchecked] Distinguish a local Bell circuit from remote entanglement distribution.
+    \item[\unchecked] Explain heralding in one sentence.
+    \item[\unchecked] Explain rate versus fidelity in one sentence each.
+    \item[\unchecked] Build the circuit in Qiskit or another simulator.
+    \item[\unchecked] Record ideal counts.
+    \item[\unchecked] Add a simple noise model and record the change.
+\end{itemize}
+
+\section{Connection to the Current Labs}
+
+\begin{itemize}
+    \item \textbf{Labs 1--8:} polarization gives single-qubit state and gate intuition.
+    \item \textbf{Lab 9:} two Bell links become the input resource for entanglement swapping.
+    \item \textbf{Lab 10:} the Bell state cannot be copied and broadcast to arbitrary users.
+    \item \textbf{Lab 11:} each Bell-link attempt has a success probability used in the route product.
+\end{itemize}
+
+\section{Questions to Answer This Week}
+
+\begin{enumerate}
+    \item Why does \(H\) have to come before CNOT?
+    \item What changes if the control and target are reversed?
+    \item How would I prepare \( |\Phi^-\rangle \), \( |\Psi^+\rangle \), and \( |\Psi^-\rangle \)?
+    \item What experiment distinguishes \( |\Phi^+\rangle \) from a classical 50/50 mixture of \( |00\rangle \) and \( |11\rangle \)?
+    \item Where does the pair source belong when Node A and Node B are physically separated?
+\end{enumerate}
+
+\section{My Explanation}
+
+Write a three-sentence explanation without looking above:
+
+\begin{enumerate}
+    \item \vspace{1cm}
+    \item \vspace{1cm}
+    \item \vspace{1cm}
+\end{enumerate}
+
+\end{document}

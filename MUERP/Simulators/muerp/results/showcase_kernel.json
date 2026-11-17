@@ -1,0 +1,205 @@
+{
+  "eq2": {
+    "native_in_sequence": false,
+    "adapter": "muerp.eq2.tree_rate",
+    "rule": "P=0 if the admitted set is not a complete spanning tree"
+  },
+  "slot_model": {
+    "simultaneous_attempts_in_kernel": false,
+    "what_we_use": "RSVP then Eq. (2). That is Zeng et al.'s slot, computed outside SeQUeNCe."
+  },
+  "volchenkov": {
+    "exact_physica_a_2002": false,
+    "still": "Barab\u00e1si\u2013Albert stand-in in graphs.py"
+  },
+  "replicas_20": "run separately: N_REPLICAS in run_sweeps.py",
+  "algs_on_waxman_10_50": {
+    "n_nodes": 60,
+    "n_edges": 180,
+    "n_users": 10,
+    "n_switches": 50,
+    "solvers": {
+      "alg2": {
+        "planner_product": 0.019673444207184986,
+        "kernel": {
+          "n_planner_channels": 9,
+          "n_admitted": 9,
+          "want_n": 9,
+          "complete_tree": true,
+          "rsvp_paths_match_pin": true,
+          "planner_eq2": 0.01967344420718499,
+          "admitted_eq2": 0.019673444207184993,
+          "occupancy": {
+            "max": 2,
+            "sum": 12,
+            "n_saturated": 0
+          },
+          "wall_s": 0.5059893340803683,
+          "physics": false,
+          "counters": {
+            "router_0": 0,
+            "router_1": 0,
+            "router_2": 0,
+            "router_3": 0,
+            "router_4": 0,
+            "router_5": 0,
+            "router_6": 0,
+            "router_7": 0,
+            "router_8": 0,
+            "router_9": 0
+          }
+        }
+      },
+      "alg3": {
+        "planner_product": 0.019673444207184986,
+        "kernel": {
+          "n_planner_channels": 9,
+          "n_admitted": 9,
+          "want_n": 9,
+          "complete_tree": true,
+          "rsvp_paths_match_pin": true,
+          "planner_eq2": 0.01967344420718499,
+          "admitted_eq2": 0.019673444207184993,
+          "occupancy": {
+            "max": 2,
+            "sum": 12,
+            "n_saturated": 0
+          },
+          "wall_s": 0.4665410830639303,
+          "physics": false,
+          "counters": {
+            "router_0": 0,
+            "router_1": 0,
+            "router_2": 0,
+            "router_3": 0,
+            "router_4": 0,
+            "router_5": 0,
+            "router_6": 0,
+            "router_7": 0,
+            "router_8": 0,
+            "router_9": 0
+          }
+        }
+      },
+      "alg4": {
+        "planner_product": 0.019673444207184986,
+        "kernel": {
+          "n_planner_channels": 9,
+          "n_admitted": 9,
+          "want_n": 9,
+          "complete_tree": true,
+          "rsvp_paths_match_pin": true,
+          "planner_eq2": 0.019673444207184993,
+          "admitted_eq2": 0.019673444207184993,
+          "occupancy": {
+            "max": 2,
+            "sum": 12,
+            "n_saturated": 0
+          },
+          "wall_s": 0.5220996658317745,
+          "physics": false,
+          "counters": {
+            "router_0": 0,
+            "router_1": 0,
+            "router_2": 0,
+            "router_3": 0,
+            "router_4": 0,
+            "router_5": 0,
+            "router_6": 0,
+            "router_7": 0,
+            "router_8": 0,
+            "router_9": 0
+          }
+        }
+      }
+    }
+  },
+  "two_groups_sharing_Qr": {
+    "group0": {
+      "users": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "planner_n": 4,
+      "planner_eq2": 0.09651186185296656,
+      "n_admitted": 4,
+      "eq2": 0.09651186185296658
+    },
+    "group1": {
+      "users": [
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "planner_n": 4,
+      "planner_eq2": 0.10978702197472003,
+      "n_admitted": 4,
+      "eq2": 0.10978702197472003
+    },
+    "shared_occupancy": {
+      "max": 2,
+      "sum": 12,
+      "n_saturated": 0
+    },
+    "q_r": 4,
+    "note": "Two 5-user trees, one Q_r pool. Eq. (2) is 0 if a group is incomplete."
+  },
+  "two_groups_Qr2": {
+    "group0": {
+      "users": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "planner_n": 4,
+      "planner_eq2": 0.09651186185296656,
+      "n_admitted": 4,
+      "eq2": 0.09651186185296658
+    },
+    "group1": {
+      "users": [
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "planner_n": 4,
+      "planner_eq2": 0.10978702197472003,
+      "n_admitted": 4,
+      "eq2": 0.10978702197472003
+    },
+    "shared_occupancy": {
+      "max": 2,
+      "sum": 12,
+      "n_saturated": 6
+    },
+    "q_r": 2,
+    "note": "Two 5-user trees, one Q_r pool. Eq. (2) is 0 if a group is incomplete."
+  },
+  "star_fidelity_and_eq2": {
+    "native_eq2": false,
+    "eq2_from_admission": 0.5314410000000002,
+    "n_admitted_channels": 2,
+    "n_eg_success": 72,
+    "n_es_success": 16,
+    "n_delivery": 0,
+    "eg_fidelity_n": 72,
+    "eg_fidelity_mean": 0.8999999999999999,
+    "es_fidelity_n": 16,
+    "es_fidelity_mean": 0.5658762113683583,
+    "es_fidelity_min": 0.3887303588611761,
+    "delivery_fidelity_n": 0,
+    "delivery_fidelity_mean": null,
+    "delivery_fidelity_min": null,
+    "coherence_s": 0.05,
+    "note": "Fidelity from SeQUeNCe event payloads, not a per-channel trajectory object."
+  }
+}

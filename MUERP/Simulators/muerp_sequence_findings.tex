@@ -1,0 +1,480 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage[T1]{fontenc}
+\usepackage{caption}
+\usepackage{xurl}
+
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+\setlist[itemize]{leftmargin=*,itemsep=0.2em,topsep=0.3em}
+\setlist[enumerate]{leftmargin=*,itemsep=0.2em,topsep=0.3em}
+\captionsetup{font=small,skip=6pt}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+\title{SeQUeNCe 1.3.1 as a host for MUERP\\[0.35em]
+{\large \emph{Multi-user Entanglement Routing Design over Quantum Internets}\\
+(Zeng et~al., ICDCS 2024)}}
+\author{Alexandra Bouillon}
+\date{November 10, 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This note rates \textbf{SeQUeNCe 1.3.1} as a host for MUERP, the routing model in Zeng et~al.\ (ICDCS 2024).
+The question is whether SeQUeNCe can reserve exclusive switch memory, follow Algorithms~1--4, and report the one-slot success probability $P$ that Zeng et~al.\ use.
+
+Four measurements, kept separate:
+(i)~\textbf{admission} on Zeng et~al.\ Fig.~4a (one switch in the middle, three users around it);
+(ii)~Algorithms~2--4 trees written into SeQUeNCe forwarding tables on one Waxman graph with 10 users and 50 switches, plus two groups sharing switch memory $Q_r$;
+(iii)~entanglement-generation and swapping fidelity on that same Fig.~4a layout; Eq.~(2) computed in \texttt{muerp.eq2}, which is not a SeQUeNCe metric;
+(iv)~a linear repeater chain, used only to time the simulator.
+
+Must-have scores $[3,5,5,4,4,3]$; weighted mean $4.00$. No Must-have is 1.
+\end{abstract}
+
+\tableofcontents
+\vspace{1em}
+
+%----------------------------------------------------------------------
+\section{What is being scored}
+
+The object under test is \textbf{SeQUeNCe 1.3.1}.
+The task is: can it host MUERP as stated by Zeng et~al.~\cite{zeng2024}?
+
+\subsection{Yardstick: MUERP (Zeng et~al.)}
+
+Zeng, Zhang, Shang, Liu, Liu, and Yang~\cite{zeng2024} define multi-user entanglement routing (MUERP):
+users $U$ and switches $R$ on $G=(V,E)$ with $V=U\cup R$; an entanglement tree of $|U|-1$ pairwise channels; per-switch budget $Q_r$; two exclusive qubits per channel through a switch.
+Fiber is treated as abundant; switches are the bottleneck.
+
+Per-channel success in one synchronized slot is
+\begin{equation}
+P_A = q^{\ell-1}\prod_{i} p_{i,i+1},\qquad
+p_{i,i+1}=\exp(-\alpha L_{i,i+1}),
+\label{eq:pa}
+\end{equation}
+with uniform swap success $q$ and default $\alpha=10^{-4}$ (length unit $\approx 1$\,km).
+The tree rate is
+\begin{equation}
+P=\prod_{A} P_A,
+\label{eq:p}
+\end{equation}
+and $P=0$ if any required channel cannot be reserved.
+Routing is offline: Algorithms~1--4 choose the tree, then every link and swap is attempted in the same slot.
+
+Zeng et~al.\ Sec.~V-A evaluates this model on random graphs (Waxman, Watts--Strogatz, Volchenkov) with $|U|=10$, $|R|=50$, $D=6$, $Q_r=4$, $q=0.9$, area $10^4\times 10^4$, and 20 replicas.
+They also name two extensions measured here: fidelity decay, and concurrent groups sharing one $Q_r$ pool.
+Algorithms~1--4 are their routing contribution.
+SeQUeNCe is scored on whether it can hold that model.
+
+\paragraph{Four-node layout versus entanglement tree.}
+Zeng et~al.\ Fig.~4a is a \textbf{four-node layout}: one switch $S$ in the middle, and three users (Alice, Bob, Carol) around it.
+That is the device graph.
+The \textbf{entanglement tree} on that graph is the two channels Alice--$S$--Bob and Alice--$S$--Carol.
+This note uses \emph{four-node layout} for the device graph and \emph{tree} for the channels.
+
+\subsection{What SeQUeNCe is}
+
+SeQUeNCe~\cite{sequence} 1.3.1 (\texttt{pip install sequence}, isolated \texttt{SeQuEnCe/.venv}, Python 3.12.4, \texttt{import sequence as sq}) is a discrete-event simulator with a resource-reservation protocol (RSVP), static routing, and \texttt{RequestApp}.
+
+Two numbers in this note must not be mixed:
+\begin{itemize}
+\item \textbf{Slot $P$} --- Eqs.~\eqref{eq:pa}--\eqref{eq:p}, one simultaneous attempt of every link and swap.
+\item \textbf{SeQUeNCe throughput} --- \texttt{RequestApp.memory\_counter} over a service window, with retries.
+\end{itemize}
+Zeng et~al.\ report slot $P$.
+SeQUeNCe attempts are sequential in simulated time.
+The slot number reported here is RSVP admission followed by Eq.~\eqref{eq:p} in \texttt{muerp.eq2}.
+
+\subsection{Measurements}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{@{}P{1.55in} Y Y@{}}
+\toprule
+Measurement & What ran & Role \\
+\midrule
+Four-node admission & RSVP on Fig.~4a; analytic $P$ & Exclusive $Q_r$ (M2) \\
+Four-node physics & Entanglement generation and swapping on Fig.~4a & Throughput vs $P$; fidelity (M11) \\
+Four-node Alg.~4 paths & Alg.~4 next hops in forwarding tables; cutoff on/off & Inject routing (M5), timing (M10) \\
+Waxman load & Dummy spanning tree, 10 users + 50 switches & Size at Zeng et~al.'s node count \\
+Waxman Alg.~2--4 paths & Those algorithms' trees on the same scale; two groups sharing $Q_r$ & M5 at 10+50; concurrent groups (M12) \\
+Linear chain & 2--100 routers, $0.2$\,s generation window & Simulator wall-clock (M14) \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Limits of these runs:
+Algorithms~1--4 choose paths; RSVP chooses which memories to reserve;
+attempts are sequential, not one simultaneous slot;
+the linear chain times the simulator, it is not a MUERP instance.
+
+%----------------------------------------------------------------------
+\section{Rating method}
+
+Scores 1--5: 5 native, 4 modest glue, 3 reimplement a primitive, 2 breaks an assumption, 1 not practical.
+Must (M1--M6) $w=3$; important (M7--M10) $w=2$; nice (M11--M15) $w=1$.
+Any Must-have of 1 bars SeQUeNCe as a MUERP host.
+Composite $\sum w_i s_i / \sum w_i$.
+
+The gate is Fig.~4a.
+This note uses $p=q=0.9$.
+Case A: $Q_S=4$ $\Rightarrow$ $P=(p^2 q)^2=0.531441$.
+Case B: $Q_S=2$ $\Rightarrow$ $P=0$.
+Failing either case fails M2/M6.
+
+%----------------------------------------------------------------------
+\section{Installation}
+
+Isolated venv; \texttt{sequence} 1.3.1; timeline smoke test exited 0.
+Python is x86\_64 under Rosetta on arm64 macOS.
+
+Physics runs used
+\begin{verbatim}
+sq.EntanglementGenerationA.set_global_type(SINGLE_HERALDED)
+sq.EntanglementGenerationB.set_global_type(SINGLE_HERALDED)
+sq.EntanglementSwappingA.set_formalism(
+    sq.constants.BELL_DIAGONAL_STATE_FORMALISM)
+sq.EntanglementSwappingB.set_formalism(
+    sq.constants.BELL_DIAGONAL_STATE_FORMALISM)
+\end{verbatim}
+Swapping formalism must match the Bell-diagonal manager.
+
+%----------------------------------------------------------------------
+\section{Algorithms 1--4}
+
+Implemented in \texttt{muerp/algorithms.py} from Zeng et~al.'s descriptions.
+They run in Python, outside SeQUeNCe, and return trees whose next hops are then written into SeQUeNCe forwarding tables (Sec.~\ref{sec:inject}, Sec.~\ref{sec:kernel60}).
+
+\begin{itemize}
+\item Alg.~1: Dijkstra on $\alpha L-\ln q$; skip remaining $Q_r<2$; $\mathrm{RATE}=q^{\ell-1}\prod p$.
+\item Alg.~2: all-pairs Alg.~1 with infinite $Q_r$, then Kruskal. Does not enforce finite $Q_r$ on the chosen tree.
+\item Alg.~3: greedy insert under remaining $Q_r$, then reconnect.
+\item Alg.~4: Prim growth with Alg.~1.
+\end{itemize}
+
+%----------------------------------------------------------------------
+\section{Four-node layout: admission}
+\label{sec:fig4a}
+
+Zeng et~al.\ Fig.~4a: one switch in the middle, three users around it.
+In this run only: \texttt{router\_0}${=}S$, \texttt{router\_1}${=}$Alice, \texttt{router\_2}${=}$Bob, \texttt{router\_3}${=}$Carol.
+On the Waxman runs, \texttt{router\_0}--\texttt{router\_9} are users (same names, different runs).
+Admission only: timeline stop $0.1$\,s, before $t=1$\,s.
+
+\begin{table}[h]
+\centering
+\caption{Four-node layout admission in SeQUeNCe 1.3.1. Analytic $P$, not throughput.}
+\label{tab:fig4a}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Case & $Q_S$ & Admitted & Memories on $S$ & $P$ \\
+\midrule
+A & 4 & both channels & $4/4$ & $0.531441$ \\
+B & 2 & Alice--Bob only; Alice--Carol rejected & $2/2$ & $0$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+RSVP takes two exclusive memories per channel and refuses the second when $Q_S=2$.
+
+Do not read one \texttt{RequestApp.reservation\_result} for two starts on Alice; use \texttt{accepted\_reservations} on the switch.
+
+%----------------------------------------------------------------------
+\section{Four-node layout: device physics versus slot $P$}
+\label{sec:physics}
+
+Bernoulli Monte Carlo, $2\times 10^4$ trials, same two channels: $0.534\pm 0.004$ (s.e.) vs analytic $0.531441$.
+That only checks the product formula.
+
+SeQUeNCe entanglement generation, $Q_S=4$, $0.2$\,s window after $t=1$\,s: Alice--Bob $7$ pairs, Carol--Alice $10$, wall $0.07$\,s.
+That is throughput, not $P$.
+
+Attenuation was set so each 5\,km half-link has transmittance $0.9$, while the NetworkX graph used for delay is $10$\,m.
+Admission is unaffected.
+Generation is a device stack calibrated to $p$, not a literal $\exp(-\alpha L)$ slot.
+
+\paragraph{Fidelity events ($T=0.05$\,s).}
+Entanglement-generation fidelity mean $0.90$ ($n=72$).
+Swapping fidelity mean $0.57$, min $0.39$ ($n=16$).
+That is a swap-fidelity log, not a per-channel trajectory object.
+\texttt{swapping\_degradation} is not a keyword on Bell-diagonal swapping in 1.3.1.
+
+%----------------------------------------------------------------------
+\section{Four-node layout: Alg.~4 paths, then cutoff}
+\label{sec:inject}
+
+In Python, Alg.~4 builds the tree.
+SeQUeNCe forwarding tables are cleared and set to those next hops (and the reverse).
+One \texttt{RequestApp} per channel; the second initiator is Carol.
+
+\begin{table}[h]
+\centering
+\caption{Alg.~4 paths in RSVP on the four-node layout. Alg.~4's product at $L=10$\,m is $0.807$; Fig.~4a slot $P$ at $p=0.9$ is $0.531441$.}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+$Q_S$ & Alg.~4 tree & RSVP & Paths match tables? & Slot $P$ at $p=0.9$ \\
+\midrule
+4 & $1$--$0$--$2$ and $1$--$0$--$3$ & both accepted & yes & $0.531441$ \\
+2 & empty & no starts & n/a & $0$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+RSVP chooses memories, so M5 is 4 rather than 5.
+Alg.~4's own product on the NetworkX graph used $L=10$\,m, so $p\approx 1$ and that product is $0.807$ (\texttt{alg4\_P} in \texttt{inject\_alg4\_coherence.json}).
+Use $0.531$ for the $p=0.9$ instance.
+
+\begin{table}[h]
+\centering
+\caption{Physics on the Alg.~4 tree, $Q_S=4$, $0.2$\,s window. Throughput, not slot $P$.}
+\label{tab:coh}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Setting & Gen.\ / swap success & Expired & Alice, Carol counters & Wall \\
+\midrule
+\texttt{coherence\_time}${=}{-}1$, cutoff off & 80 / 18 & 0 & 7, 10 & $0.068$\,s \\
+$T=0.01$\,s, cutoff on & 84 / 13 & 44 & 0, 0 & $0.067$\,s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Bob's counter is 0 (responder).
+Admission is unchanged when cutoff is on; retry-throughput changes.
+A timed simulator can disable wait (infinite lifetime) or kill pairs (short cutoff).
+That is not Zeng et~al.'s simultaneous slot.
+
+%----------------------------------------------------------------------
+\section{Waxman, 10 users and 50 switches}
+
+Two runs at Zeng et~al.'s node count.
+They use different trees; do not mix the two $P$ values.
+On both runs, \texttt{router\_0}--\texttt{router\_9} are users.
+
+\subsection{Load: dummy spanning tree}
+\label{sec:waxman}
+
+Waxman, 60 nodes, area $10^4\times 10^4$, seed 0, NetworkX $\alpha=0.15$, $\beta=0.8$, mean degree $6.33$ (Zeng et~al.\ use $D=6$).
+$Q_r=4$ on switches.
+Tree: a minimum spanning tree of shortest paths among users (9 channels).
+This tree is a load generator, not Alg.~2, 3, or 4.
+
+Admitted $9/9$; analytic $P=0.0352$; max occupancy $2/4$; wall $0.55$\,s (of which $0.50$\,s is \texttt{RouterNetTopo}); peak RSS $160$\,MB.
+Admission only: no entanglement generation.
+
+\subsection{Algorithms 2--4 paths}
+\label{sec:kernel60}
+
+\texttt{muerp/showcase\_kernel.py}, seed 0, $|U|=10$, $|R|=50$, $Q_r=4$.
+\texttt{muerp/algorithms.py} builds the tree; forwarding tables are set to those next hops; RSVP admits; \texttt{muerp.eq2.tree\_rate} computes $P$.
+SeQUeNCe has no native Eq.~(2).
+
+\begin{table}[h]
+\centering
+\caption{One Waxman 10+50, admission only. Algs.~2--4 coincided on this draw. $P=0.0197$ is this tree, not the dummy tree in Sec.~\ref{sec:waxman}.}
+\label{tab:kernel60}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Solver & Alg.~$P$ & Admitted & Paths match tables? & RSVP Eq.~(2) \\
+\midrule
+Alg.~2, 3, 4 & 0.0197 & $9/9$ & yes & 0.0197 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Wall $\approx 0.5$\,s per solver (mostly \texttt{RouterNetTopo}). Max occupancy $2/4$.
+One replica; admission only.
+
+\paragraph{Two groups sharing $Q_r$.}
+Users $\{0..4\}$ and $\{5..9\}$, Alg.~4 each, one RSVP pool.
+At $Q_r=4$ and $Q_r=2$ both groups admitted $4/4$ on this draw (max occupancy 2; at $Q_r=2$, six switches saturated).
+The pool is shared. These two trees did not block each other.
+
+%----------------------------------------------------------------------
+\section{Linear repeater chain}
+\label{sec:chain}
+
+\texttt{probes/repeater\_chain\_speed.py}: path of $n$ \texttt{QuantumRouter}s, one \texttt{RequestApp} from \texttt{router\_0} to the far end, $q=0.9$, 8 memories, infinite coherence.
+Admission stops before the service window.
+Physics uses the same $0.2$\,s window as the four-node layout.
+Each size ran in its own process.
+
+This is SeQUeNCe wall-clock on a line, not a MUERP random graph and not slot $P$.
+
+\begin{table}[h]
+\centering
+\caption{Linear chain, SeQUeNCe 1.3.1. RSVP admitted every size.}
+\label{tab:chain}
+\begin{tabular}{@{}rrrrrr@{}}
+\toprule
+Routers & Hops & Admit (s) & Physics (s) & Peak RSS (MB) & Pairs in $0.2$\,s \\
+\midrule
+2 & 1 & 0.005 & 0.019 & 155 & 1 \\
+5 & 4 & 0.007 & 0.036 & 156 & 1 \\
+10 & 9 & 0.011 & 0.066 & 157 & 0 \\
+20 & 19 & 0.027 & 0.155 & 155 & 0 \\
+50 & 49 & 0.18 & 0.60 & 159 & 0 \\
+100 & 99 & 1.02 & 2.02 & 167 & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+At 50--100 routers, most of the wall-clock is \texttt{RouterNetTopo} construction, not the $0.2$\,s of entanglement generation.
+End-to-end \texttt{memory\_counter} is already 0 at 10 hops in this window: swap-wait along the chain.
+
+%----------------------------------------------------------------------
+\section{API map (M1--M6)}
+
+Hooks are from installed 1.3.1 (\texttt{set\_swapping\_success\_rate} is absent).
+
+\paragraph{M1 (score 3).}
+\texttt{generate\_config} $\to$ \texttt{RouterNetTopo}.
+Only \texttt{QuantumRouter} and \texttt{BSMNode}.
+\texttt{node\_type} is dropped.
+No User class; \texttt{sq.Switch} is optics.
+Tag roles by name and \texttt{memo\_size}.
+
+\paragraph{M2 (score 5).}
+Intermediates reserve $2\times$\texttt{memory\_size}.
+\texttt{MemoryTimeCard} refuses overlap.
+Fig.~4a post-edits $S$ to 4 or 2.
+
+\paragraph{M3 (score 5).}
+\texttt{swapping\_success\_prob} (default 1) is Zeng et~al.'s $q$, not mid-link \texttt{SingleHeraldedBSM}.
+
+\paragraph{M4 (score 4).}
+Loss is dB/m, not $\exp(-\alpha L)$.
+Convert, or multiply $p$ after admission.
+
+\paragraph{M5 (score 4).}
+\texttt{RequestApp.start} has no path argument.
+Forwarding tables can be overwritten.
+RSVP chooses memories.
+Evidence: Algs.~2--4 paths on one 10+50 Waxman (Sec.~\ref{sec:kernel60}).
+
+\paragraph{M6 (score 3).}
+No native $P$.
+Reject $\Rightarrow$ $P=0$; else multiply $p$ and $q$ in the script.
+Do not use \texttt{memory\_counter}.
+
+%----------------------------------------------------------------------
+\section{Scorecard}
+
+M10 is an interpolation: anchors are 3 (timed only) and 5 (slotted \emph{and} timed).
+M14 is SeQUeNCe wall-clock on the graphs in this note.
+
+\begin{table}[h]
+\centering
+\caption{SeQUeNCe as a MUERP host.}
+\label{tab:score}
+{\small
+\begin{tabularx}{\textwidth}{@{}l P{1.2in} r r Y@{}}
+\toprule
+ID & Metric & $w$ & $s$ & Evidence / limit \\
+\midrule
+M1 & Users vs switches & 3 & 3 & Same \texttt{QuantumRouter} type. \\
+M2 & Exclusive $Q_r$ & 3 & 5 & Fig.~4a: $Q_S=4$ admits, $Q_S=2$ rejects. \\
+M3 & BSM, constant $q$ & 3 & 5 & \texttt{swapping\_success\_prob}. \\
+M4 & $p=\exp(-\alpha L)$ & 3 & 4 & dB/m; convert or compute $p$ outside. \\
+M5 & Inject Algs~1--4 & 3 & 4 & Algs.~2--4 paths on one 10+50 Waxman; RSVP chooses memories. \\
+M6 & Export $P$ & 3 & 3 & \texttt{muerp.eq2}. No SeQUeNCe metric named $P$. \\
+M7 & Independent channels & 2 & 4 & Two channels, 4 exclusive qubits on $S$. \\
+M8 & Multi-user tree & 2 & 3 & Pairwise apps; product outside. \\
+M9 & Scale & 2 & 4 & 10+50 RSVP $\approx 0.5$\,s, one replica. \\
+M10 & Slot vs decoherence & 2 & 4 & Timed; cutoff on/off. Slot $P$ is Eq.~(2) after RSVP. \\
+M11 & Fidelity extension & 1 & 4 & Swapping fidelity mean $0.57$ vs generation $0.90$ on the four-node layout. \\
+M12 & Concurrent groups & 1 & 4 & Two 5-user trees, one $Q_r$ pool; both fit on this draw. \\
+M13 & Open internals & 1 & 5 & PyPI 1.3.1 modules. \\
+M14 & Runtime on this workload & 1 & 4 & Waxman $0.55$\,s / $160$\,MB; chain $\le 2$\,s at 100 routers. \\
+M15 & State representation & 1 & 5 & \texttt{bell\_diagonal} for this stack. \\
+\midrule
+ & Mean & 31 & 4.00 & Must-have scores $[3,5,5,4,4,3]$. \\
+\bottomrule
+\end{tabularx}}
+\end{table}
+
+Numerator $3(3+5+5+4+4+3)+2(4+3+4+4)+(4+4+5+4+5)=124$. Mean $124/31=4$.
+
+%----------------------------------------------------------------------
+\section{Implementation pitfalls}
+
+\begin{enumerate}
+\item \texttt{reservation\_result} is overwritten by a second start on the same app.
+\item Reverse the second channel if both would share Alice as initiator.
+\item Swapping formalism must match the Bell-diagonal manager.
+\item \texttt{generate\_config} ignores \texttt{node\_type} and writes one \texttt{memo\_size}.
+\item Default \texttt{swapping\_success\_prob} is 1, not $q=0.9$.
+\item Mid-link \texttt{BSMNode} is not Zeng et~al.'s switch and not $q$.
+\item Slot $P$ $\neq$ \texttt{memory\_counter}. Stop before the service window for admission.
+\item \texttt{alg4\_P}${}=0.807$ in the injection JSON is the $10$\,m product, not $0.531$.
+\item \texttt{router\_0} is $S$ on the four-node layout and a user on the Waxman runs.
+\item Matplotlib font cache can look like a hang. Set \texttt{MPLCONFIGDIR=/tmp/sequence-mpl}.
+\end{enumerate}
+
+%----------------------------------------------------------------------
+\section{Files}
+
+Paths relative to \texttt{MUERP/Simulators/}.
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+File & Role \\
+\midrule
+\texttt{sequence\_api\_map\_m1\_m6.md} & Calls, no scores \\
+\texttt{probes/fig4a\_sequence.py} & Four-node layout admission \\
+\texttt{probes/waxman\_replica\_sequence.py} & Dummy-tree 10+50 RSVP \\
+\texttt{probes/repeater\_chain\_speed.py} & Linear chain 2--100 routers \\
+\texttt{muerp/results/repeater\_chain\_speed.json} & Chain wall-clock dump \\
+\texttt{muerp/algorithms.py} & Algorithms~1--4 \\
+\texttt{muerp/eq2.py} & Eq.~(1)--(2) \\
+\texttt{muerp/showcase\_kernel.py} & Algs~2--4 paths; two groups; four-node fidelity \\
+\texttt{muerp/mc\_physics.py} & Slot Monte Carlo + unpaired generation \\
+\texttt{muerp/inject\_alg4\_coherence.py} & Alg.~4 paths; cutoff \\
+\texttt{SeQuEnCe/.venv} & 1.3.1 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{verbatim}
+export MPLCONFIGDIR=/tmp/sequence-mpl
+export PYTHONPATH=MUERP/Simulators
+SeQuEnCe/.venv/bin/python -m muerp.inject_alg4_coherence
+\end{verbatim}
+
+%----------------------------------------------------------------------
+\section{What these runs show}
+
+SeQUeNCe 1.3.1 can reserve exclusive qubits the way MUERP requires on Zeng et~al.'s four-node layout, refuse a second channel when $Q_S=2$, and follow Alg.~2/3/4 next-hop tables on a 10+50 Waxman ($9/9$ admitted, $P=0.0197$ on that tree).
+Eqs.~\eqref{eq:pa}--\eqref{eq:p} are computed in \texttt{muerp.eq2}, not by SeQUeNCe.
+Two 5-user groups can share one $Q_r$ pool; on this draw both completed.
+Swapping events carry fidelity (mean $0.57$ after swaps vs $0.90$ at generation).
+Attempts in SeQUeNCe are sequential; the simultaneous slot is Eq.~\eqref{eq:p} after RSVP.
+
+Must-have scores $[3,5,5,4,4,3]$, weighted mean $4.00$.
+SeQUeNCe can host the MUERP admission model on the instances in this note.
+
+\begin{thebibliography}{9}
+\bibitem{zeng2024}
+Y.\ Zeng, J.\ Zhang, X.\ Shang, J.\ Liu, Z.\ Liu, and Y.\ Yang,
+``Multi-user Entanglement Routing Design over Quantum Internets,''
+in \textit{Proc.\ IEEE 44th International Conference on Distributed Computing Systems (ICDCS)}, 2024.
+DOI: \href{https://doi.org/10.1109/ICDCS60910.2024.00033}{10.1109/ICDCS60910.2024.00033}.
+Repo source: \texttt{MUERP/MultiUser\_Paper\_1.md}.
+
+\bibitem{sequence}
+X.\ Wu et~al.,
+``SeQUeNCe: a customizable discrete-event simulator of quantum networks,''
+\textit{Quantum Sci.\ Technol.}, 2021.
+Package: \texttt{sequence} 1.3.1, \url{https://github.com/sequence-toolbox/SeQUeNCe}.
+\end{thebibliography}
+
+\end{document}

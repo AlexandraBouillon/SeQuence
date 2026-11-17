@@ -1,0 +1,52 @@
+[
+  {
+    "q_s": 4,
+    "p": 0.9,
+    "q": 0.9,
+    "config": "/Users/alexandrabouillon/Documents/Quantum_Networking/MUERP/Simulators/probes/fig4a_qs4.json",
+    "admitted": {
+      "router_1-router_2": true,
+      "router_1-router_3": true
+    },
+    "paths": {
+      "router_1-router_2": [
+        "router_1",
+        "router_0",
+        "router_2"
+      ],
+      "router_1-router_3": [
+        "router_1",
+        "router_0",
+        "router_3"
+      ]
+    },
+    "switch_memories_reserved": 4,
+    "switch_memo_size": 4,
+    "alice_reservation_result_last_only": true,
+    "P": 0.5314410000000002,
+    "expected_P": 0.5314410000000002
+  },
+  {
+    "q_s": 2,
+    "p": 0.9,
+    "q": 0.9,
+    "config": "/Users/alexandrabouillon/Documents/Quantum_Networking/MUERP/Simulators/probes/fig4a_qs2.json",
+    "admitted": {
+      "router_1-router_2": true,
+      "router_1-router_3": false
+    },
+    "paths": {
+      "router_1-router_2": [
+        "router_1",
+        "router_0",
+        "router_2"
+      ],
+      "router_1-router_3": []
+    },
+    "switch_memories_reserved": 2,
+    "switch_memo_size": 2,
+    "alice_reservation_result_last_only": true,
+    "P": 0.0,
+    "expected_P": 0.0
+  }
+]

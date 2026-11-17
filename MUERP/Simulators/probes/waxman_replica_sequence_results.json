@@ -1,0 +1,41 @@
+{
+  "waxman": {
+    "alpha": 0.15,
+    "beta": 0.8,
+    "degree": 6.333333333333333,
+    "edges": 190
+  },
+  "n_users": 10,
+  "n_switches": 50,
+  "q_r": 4,
+  "q": 0.9,
+  "alpha_paper": 0.0001,
+  "n_qchannels": 380,
+  "n_bsm": 190,
+  "n_tree_channels": 9,
+  "admitted": {
+    "router_0-router_9": true,
+    "router_0-router_5": true,
+    "router_1-router_7": true,
+    "router_2-router_7": true,
+    "router_2-router_4": true,
+    "router_3-router_7": true,
+    "router_3-router_5": true,
+    "router_4-router_6": true,
+    "router_8-router_9": true
+  },
+  "n_admitted": 9,
+  "P": 0.035175826143098686,
+  "switch_memories_used_max": 2,
+  "switch_memories_used_sum": 18,
+  "switches_saturated": 0,
+  "seconds": {
+    "graph_config": 0.03270508302375674,
+    "load_topo": 0.5041942922398448,
+    "init": 0.01027583284303546,
+    "rsvp_run": 0.0035549169406294823,
+    "total": 0.5507301250472665
+  },
+  "peak_rss_mb": 159.91015625,
+  "note": "Dummy MST of shortest paths, not paper Algorithms 1-4. Admission-only."
+}

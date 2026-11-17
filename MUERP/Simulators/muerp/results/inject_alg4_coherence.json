@@ -1,0 +1,288 @@
+{
+  "admit_qs4": {
+    "q_s": 4,
+    "coherence_s": -1,
+    "cutoff": false,
+    "physics": false,
+    "alg4_channels": [
+      {
+        "src": "router_1",
+        "dst": "router_2",
+        "path": [
+          "router_1",
+          "router_0",
+          "router_2"
+        ],
+        "rate": 0.8982017988005998
+      },
+      {
+        "src": "router_1",
+        "dst": "router_3",
+        "path": [
+          "router_1",
+          "router_0",
+          "router_3"
+        ],
+        "rate": 0.8982017988005998
+      }
+    ],
+    "alg4_P": 0.8067664713686332,
+    "starts": [
+      {
+        "initiator": "router_1",
+        "responder": "router_2",
+        "pinned_path": [
+          "router_1",
+          "router_0",
+          "router_2"
+        ]
+      },
+      {
+        "initiator": "router_3",
+        "responder": "router_1",
+        "pinned_path": [
+          "router_3",
+          "router_0",
+          "router_1"
+        ]
+      }
+    ],
+    "accepted": [
+      {
+        "initiator": "router_1",
+        "responder": "router_2",
+        "rsvp_path": [
+          "router_1",
+          "router_0",
+          "router_2"
+        ]
+      },
+      {
+        "initiator": "router_3",
+        "responder": "router_1",
+        "rsvp_path": [
+          "router_3",
+          "router_0",
+          "router_1"
+        ]
+      }
+    ],
+    "n_tree": 2,
+    "n_admitted": 2,
+    "rsvp_paths_match_alg4": true,
+    "path_match_detail": [
+      true,
+      true
+    ],
+    "deliveries": 0,
+    "memory_expired": 0,
+    "eg_success": 0,
+    "es_success": 0,
+    "app_counters": {
+      "router_1": 0,
+      "router_2": 0,
+      "router_3": 0
+    },
+    "wall_s": 0.0008008750155568123,
+    "complete_tree": true
+  },
+  "admit_qs2": {
+    "q_s": 2,
+    "coherence_s": -1,
+    "cutoff": false,
+    "physics": false,
+    "alg4_channels": [],
+    "alg4_P": 0.0,
+    "starts": [],
+    "accepted": [],
+    "n_tree": 0,
+    "n_admitted": 0,
+    "rsvp_paths_match_alg4": false,
+    "path_match_detail": [],
+    "deliveries": 0,
+    "memory_expired": 0,
+    "eg_success": 0,
+    "es_success": 0,
+    "app_counters": {
+      "router_1": 0,
+      "router_2": 0,
+      "router_3": 0
+    },
+    "wall_s": 1.3708136975765228e-05,
+    "complete_tree": false
+  },
+  "physics_coh_off": {
+    "q_s": 4,
+    "coherence_s": -1,
+    "cutoff": false,
+    "physics": true,
+    "alg4_channels": [
+      {
+        "src": "router_1",
+        "dst": "router_2",
+        "path": [
+          "router_1",
+          "router_0",
+          "router_2"
+        ],
+        "rate": 0.8982017988005998
+      },
+      {
+        "src": "router_1",
+        "dst": "router_3",
+        "path": [
+          "router_1",
+          "router_0",
+          "router_3"
+        ],
+        "rate": 0.8982017988005998
+      }
+    ],
+    "alg4_P": 0.8067664713686332,
+    "starts": [
+      {
+        "initiator": "router_1",
+        "responder": "router_2",
+        "pinned_path": [
+          "router_1",
+          "router_0",
+          "router_2"
+        ]
+      },
+      {
+        "initiator": "router_3",
+        "responder": "router_1",
+        "pinned_path": [
+          "router_3",
+          "router_0",
+          "router_1"
+        ]
+      }
+    ],
+    "accepted": [
+      {
+        "initiator": "router_1",
+        "responder": "router_2",
+        "rsvp_path": [
+          "router_1",
+          "router_0",
+          "router_2"
+        ]
+      },
+      {
+        "initiator": "router_3",
+        "responder": "router_1",
+        "rsvp_path": [
+          "router_3",
+          "router_0",
+          "router_1"
+        ]
+      }
+    ],
+    "n_tree": 2,
+    "n_admitted": 2,
+    "rsvp_paths_match_alg4": true,
+    "path_match_detail": [
+      true,
+      true
+    ],
+    "deliveries": 0,
+    "memory_expired": 0,
+    "eg_success": 80,
+    "es_success": 18,
+    "app_counters": {
+      "router_1": 7,
+      "router_2": 0,
+      "router_3": 10
+    },
+    "wall_s": 0.06836875015869737,
+    "complete_tree": true
+  },
+  "physics_coh_on": {
+    "q_s": 4,
+    "coherence_s": 0.01,
+    "cutoff": true,
+    "physics": true,
+    "alg4_channels": [
+      {
+        "src": "router_1",
+        "dst": "router_2",
+        "path": [
+          "router_1",
+          "router_0",
+          "router_2"
+        ],
+        "rate": 0.8982017988005998
+      },
+      {
+        "src": "router_1",
+        "dst": "router_3",
+        "path": [
+          "router_1",
+          "router_0",
+          "router_3"
+        ],
+        "rate": 0.8982017988005998
+      }
+    ],
+    "alg4_P": 0.8067664713686332,
+    "starts": [
+      {
+        "initiator": "router_1",
+        "responder": "router_2",
+        "pinned_path": [
+          "router_1",
+          "router_0",
+          "router_2"
+        ]
+      },
+      {
+        "initiator": "router_3",
+        "responder": "router_1",
+        "pinned_path": [
+          "router_3",
+          "router_0",
+          "router_1"
+        ]
+      }
+    ],
+    "accepted": [
+      {
+        "initiator": "router_1",
+        "responder": "router_2",
+        "rsvp_path": [
+          "router_1",
+          "router_0",
+          "router_2"
+        ]
+      },
+      {
+        "initiator": "router_3",
+        "responder": "router_1",
+        "rsvp_path": [
+          "router_3",
+          "router_0",
+          "router_1"
+        ]
+      }
+    ],
+    "n_tree": 2,
+    "n_admitted": 2,
+    "rsvp_paths_match_alg4": true,
+    "path_match_detail": [
+      true,
+      true
+    ],
+    "deliveries": 0,
+    "memory_expired": 44,
+    "eg_success": 84,
+    "es_success": 13,
+    "app_counters": {
+      "router_1": 0,
+      "router_2": 0,
+      "router_3": 0
+    },
+    "wall_s": 0.06658787466585636,
+    "complete_tree": true
+  }
+}

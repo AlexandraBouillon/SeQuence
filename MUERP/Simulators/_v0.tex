@@ -1,0 +1,107 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage[T1]{fontenc}
+
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+
+\newcommand{\nature}{\href{https://www.nature.com/articles/s42005-021-00647-8}{nature}}
+\newcommand{\github}{\href{https://github.com/sequence-toolbox/SeQUeNCe}{github}}
+\newcommand{\arxivseq}{\href{https://arxiv.org/html/2009.12000}{arxiv}}
+\newcommand{\anl}{\href{https://www.anl.gov/sequence-simulator-of-quantum-network-communication}{anl}}
+\newcommand{\dlacm}{\href{https://dl.acm.org/doi/10.1145/3634701}{dl.acm}}
+\newcommand{\arxivclosed}{\href{https://arxiv.org/html/2412.08956v1}{arxiv}}
+\newcommand{\arxivqsm}{\href{https://arxiv.org/html/2610.09322v1}{arxiv}}
+
+\title{NetSquid and SeQUeNCe: Simulator Comparison}
+\author{Alexandra Bouillon}
+\date{November 10, 2026}
+
+\begin{document}
+\maketitle
+
+NetSquid and SeQUeNCe are both discrete-event quantum-network simulators, but they emphasize different modeling workflows. NetSquid is particularly attractive for detailed device behavior, timing, and custom asynchronous protocols; SeQUeNCe is particularly attractive for an open-source, modular network stack spanning photonic hardware, entanglement management, resource allocation, and applications. These are differences of \textbf{emphasis}, not strict limits on what either can simulate. \nature
+
+\section{Side-by-side comparison}
+
+{\small
+\renewcommand{\tabularxcolumn}[1]{>{\raggedright\arraybackslash}p{#1}}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.18\textwidth}XX@{}}
+\toprule
+\textbf{Aspect} & \textbf{NetSquid} & \textbf{SeQUeNCe} \\
+\midrule
+Full name
+  & NETwork Simulator for QUantum Information using Discrete events. \nature
+  & Simulator of QUantum Network Communication. \github \\
+\addlinespace
+Simulation approach
+  & Discrete-event simulation, integrating quantum-state evolution with hardware events and asynchronous protocol execution. \nature
+  & Discrete-event simulation, with a simulation kernel and modular hardware-to-application functionality. \arxivseq \\
+\addlinespace
+Main modeling emphasis
+  & Physically detailed quantum networking and modular quantum computing, including noisy devices, control processes, and feedback. \nature
+  & Photonic quantum networks, including hardware, control protocols, resource management, and applications. \anl \\
+\addlinespace
+Architecture
+  & Composable hardware models, a specialized quantum-computing library, and an asynchronous protocol framework. \nature
+  & Five modules above the kernel: hardware, entanglement management, resource management, network management, and applications. \github \\
+\addlinespace
+Programming interface
+  & Python package with an asynchronous programming framework for protocols. \nature
+  & Python-based, with editable modules for adding devices, algorithms, and protocols. \arxivseq \\
+\addlinespace
+Quantum-state representation
+  & Multiple representations---including ket vectors, density matrices, stabilizer, and graph-state representations---support different accuracy and scalability trade-offs. \dlacm
+  & A quantum-state manager tracks states and supports quantum operations, measurements, and noise modeling; available capabilities depend on the selected implementation and model. \arxivqsm \\
+\addlinespace
+Source availability
+  & Not open source; this matters if you need to inspect or modify simulator internals. \arxivclosed
+  & Open source, with publicly available code and customizable modules. \anl \\
+\addlinespace
+Scaling evidence
+  & Its foundational work demonstrated a repeater chain of up to 1{,}000 nodes; that is a particular workload, not a general capacity guarantee. \dlacm
+  & A parallel extension has been developed to distribute discrete-event simulation and quantum-state management across processes. \dlacm \\
+\bottomrule
+\end{tabularx}
+}
+
+\section{What the differences mean in practice}
+
+\subsection{Both treat time as part of the physics}
+
+Neither is merely a circuit simulator with network connections added. In discrete-event simulation, the simulator advances between events such as photon arrivals, classical-message deliveries, memory operations, and measurement outcomes. NetSquid explicitly integrates this timing with decoherence and asynchronous feedback; SeQUeNCe likewise combines event scheduling, hardware models, and quantum-state management. \nature
+
+That matters for a repeater experiment: a successful entangled pair may need to wait in memory while another link retries or while a classical acknowledgment travels. Comparing protocols without accounting for those delays can miss the interaction between memory degradation and network control. NetSquid's foundational paper specifically identifies these timing and feedback effects as central simulation requirements. \nature
+
+\subsection{Their abstractions guide how you build an experiment}
+
+NetSquid's design centers on composing physical components and programming their interacting protocols. That makes it a natural candidate when the main question concerns device-level behavior, operation scheduling, or feedback under realistic noise. It can still model higher network layers and applications. \nature
+
+SeQUeNCe provides explicit modules for functions such as entanglement management and resource management. For example, its architecture separates memory allocation from the protocols that generate, purify, and swap entanglement. That makes it a natural candidate when the main question concerns how network-management decisions interact with hardware constraints. Its modules are customizable rather than a mandatory, fixed quantum-internet architecture. \arxivseq
+
+\subsection{There is no defensible universal speed winner}
+
+NetSquid's demonstrated large repeater chain and SeQUeNCe's parallel extension establish useful capabilities, but they do not constitute a matched benchmark. Quantum-state representation, entanglement structure, noise models, event counts, and execution strategy can change the computational workload substantially. The parallel-simulation study discusses both representation-dependent scaling and the limits of sequential event execution. \dlacm
+
+For a fair comparison, use the same topology, physical assumptions, protocol behavior, and requested outputs---not merely the same node count. Treat the parallel SeQUeNCe implementation as a separate execution configuration rather than assuming every standard SeQUeNCe simulation automatically uses multiple processors. \dlacm
+
+\section{Which should you choose?}
+
+Based on their documented architectures, I would use these selection rules:
+
+\begin{itemize}[leftmargin=*]
+    \item Choose NetSquid when your primary contribution is a hardware-sensitive protocol, detailed timing/control analysis, or a heterogeneous quantum-node model, and a non-open-source simulator is acceptable. \nature
+    \item Choose SeQUeNCe when your primary contribution is routing or network-management behavior, memory/resource allocation, or changes to the simulator itself---and public source access is important. \arxivseq
+    \item Evaluate SeQUeNCe's parallel extension when a single simulation is too large or slow for sequential execution; do not assume parallelism will provide the same benefit for every workload. \dlacm
+\end{itemize}
+
+For an initial comparison project, implement the same small repeater chain in both and measure delivered entanglement rate, fidelity, memory occupancy, and simulation runtime under matched assumptions. That tests the modeling features you actually need without confusing a framework's architectural emphasis with a hard capability boundary.
+
+\end{document}
